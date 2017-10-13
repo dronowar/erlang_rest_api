@@ -14,16 +14,16 @@ init(Req, _State) ->
     {_, Req1} = cowboy_session:set(<<"user_id">>, 15, Req),
     {Value, Req2} = cowboy_session:get(<<"user_id">>, Req1),
     io:format("session value: ~p~n", [Value]),
-	Message = [hello, <<"Good day">>],
-	{cowboy_rest, Req2, Message}.
+    Message = [hello, <<"Good day">>],
+    {cowboy_rest, Req2, Message}.
 
-allowed_methods(Req, State) -> 	
-	{[<<"GET">>], Req, State}.
+allowed_methods(Req, State) ->  
+    {[<<"GET">>], Req, State}.
 
 content_types_provided(Req, State) ->
-	{[
- 		{{<<"application">>, <<"json">>, []}, hello_to_json}
- 	], Req, State}.
+    {[
+        {{<<"application">>, <<"json">>, []}, hello_to_json}
+    ], Req, State}.
 
 hello_to_json(Req, State) ->
-	{jiffy:encode(State), Req, State}.
+    {jiffy:encode(State), Req, State}.
