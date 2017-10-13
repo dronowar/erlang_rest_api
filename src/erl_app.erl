@@ -18,6 +18,7 @@ start(_StartType, _StartArgs) ->
         #{env => #{dispatch => Dispatch}, 
         middlewares => [cowboy_router, session_middleware, cowboy_handler]
     }),
+    % cowboy_session:start(),
     erl_sup:start_link().
 
 stop(_State) ->
