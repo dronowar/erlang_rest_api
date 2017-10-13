@@ -1,0 +1,15 @@
+{application, erl,
+[
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+      kernel,
+      stdlib,
+		  jiffy,
+		  cowboy,
+          cowboy_session
+    ]},
+  {mod, { erl_app, []}},
+  {env, []}
+]}.
