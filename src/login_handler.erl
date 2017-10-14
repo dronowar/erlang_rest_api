@@ -13,7 +13,7 @@
 -export([login_from_json/2]).
 
 init(Req, State) ->
-    io:format("login~n"),
+    % io:format("login~n"),
     % Email = proplists:get_value(<<"email">>, PostVals),
     % Password = proplists:get_value(<<"pass">>, PostVals),
     % Fields = 
@@ -47,41 +47,87 @@ content_types_accepted(Req, State) ->
 %     {<<"Alladin">>, Req, State}.
 
 login_from_json(Req, State) ->
-    io:format("login_from_json~n"),
     {ok, Body, Req1} = cowboy_req:read_urlencoded_body(Req),
-    io:format("Body: ~p~n", [Body]),
+    Input = get_body(Body, Req1),
+    % erlang:display(get_body(Body, Req1)),
     Model = [
         {<<"email">>, required, string, email, [non_empty]},
         {<<"pass">>, required, string, pass, [non_empty]}
     ],
-    {Emodel, Req0} = reply_json(Body, Model, Req1),
+    Emodel = get_model(Input, Model, Req1),
+    erlang:display(Emodel),
+    case Emodel of
+        {error, Reason} ->
+            reply(412, {Reason}, Req1);
+        {ok, _} ->
+            login(Emodel, Req1)       
+    end,
+        
+    % {Session, _} = cowboy_session:get(<<"user">>, Req1),
+    % erlang:display(Session),
+            % Response = Req3
+    
+    % erlang:display(Emodel),
+    % erlang:display(Req),
+    % erlang:display(Req1),
+    % erlang:display(Req2),
+    % erlang:display("Session"),
+    % erlang:display(Emodel),
     % io:format("Req0: ~p~n", [Req0]),
-    io:format("Emodel: ~p~n", [Emodel]),
-    {true, Req0, State}.
+    % io:format("Emodel: ~p~n", [Emodel]),
+    % {_, Req3} = login(Emodel, Req2),
+    % Res = cowboy_session:get(<<"user">>, Req2),
+    {true, Req1, State}.
 
-reply_json(Body, Model, Req) ->
-    case Body of 
-        [{PostVals, true}] ->
-            io:format("Post: ~p~n", [PostVals]), 
-            try jiffy:decode(PostVals, [return_maps]) of
-                Data ->
-                    % Email = maps:get(<<"email">>, Data),
-                    Emodel = emodel:from_map(Data, #{}, Model),
-                    Req3 = reply(200, Data, Req),
-                    {Emodel, Req3}
-            catch
-                _:_ -> 
-                    Req3 = reply(400, <<"Invalid json">>, Req),
-                    {false, Req3}
-            end;
-        [] ->
-            Req2 = reply(400, <<"Missing body">>, Req),
-            {false, Req2};
+login(Emodel, Req) ->
+    case cowboy_session:get(<<"user">>, Req) of
+        undefined ->
+            {ok, Req1} = cowboy_session:set(<<"user">>, Emodel, Req);
         _ ->
-            Req2 = reply(400, <<"Bad request">>, Req),
-            {false, Req2}
+            reply(400, <<"Allready auth">>, Req)
+    end.
+    % {ok, Req}.
+
+get_body(Body, Req) ->
+    case Body of 
+        [{Input, true}] ->
+            Input;
+        [] ->
+            reply(400, <<"Missing body">>, Req);
+            % {ok, Resp} = reply(400, <<"Missing body">>, Req),
+            % {false, Resp};
+        _ ->
+            reply(400, <<"Bad request">>, Req)
     end.
 
+get_model(Input, Model, Req) ->
+    % {ok, Req3} = reply(400, <<"Invalid json">>, Req),
+    % {false, Req3}.
+    % case Body of 
+        % [{Input, true}] ->
+            % io:format("Post: ~p~n", [Input]), 
+            try jiffy:decode(Input, [return_maps]) of
+                Data ->
+            %         % Email = maps:get(<<"email">>, Data),
+                    emodel:from_map(Data, #{}, Model)
+            %         Req3 = reply(200, Data, Req),
+            catch
+                _:_ ->
+                    % false
+                    reply(400, <<"Invalid json">>, Req)
+                    % {false, Req3};
+            end.
+        % [] ->
+            % Req2 = reply(400, <<"Missing body">>, Req),
+            % {false, Req2};
+        % _ ->
+            % Req2 = reply(400, <<"Bad request">>, Req),
+            % {false, Req2}
+    % end.
+
+% reply(Code, Body, Req) ->
+    % get_reply()    
+
 reply(Code, Body, Req) ->
-    Req1 = cowboy_req:reply(Code, #{<<"content-type">> => <<"application/json">>}, jiffy:encode(Body), Req),
-    {ok, Req1}.
+    cowboy_req:reply(Code, #{<<"content-type">> => <<"application/json">>}, jiffy:encode(Body), Req).
+    % {ok, Resp}.

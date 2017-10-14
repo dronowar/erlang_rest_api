@@ -9,7 +9,8 @@ execute(Req, Env) ->
     % #{sessionid := CSessionID} = cowboy_req:match_cookies([{sessionid, [], <<>>}], Req0),
     % io:format("cookies: ~p~n", [CSessionID]),
 
-    {_, Req1} = cowboy_session:touch(Req),
+    {ok, Req1} = cowboy_session:touch(Req),
     % {Value, Req2} = cowboy_session:get(<<"user_id">>, Req1),
     % io:format("session value: ~p~n", [Value]),
+
     {ok, Req1, Env}.
