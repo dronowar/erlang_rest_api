@@ -11,11 +11,14 @@
 
 start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile([         
-        {'_', [{"/", hello_handler, []}]}     
+            {'_', [
+                {"/", hello_handler, []},
+                {"/login", login_handler, []} 
+            ]}     
     ]),     
     {ok, _} = cowboy:start_clear(my_http_listener,
         [{port, 8080}],
-        #{env => #{dispatch => Dispatch}, 
+        #{env => #{dispatch => Dispatch},
         middlewares => [cowboy_router, session_middleware, cowboy_handler]
     }),
     % cowboy_session:start(),
