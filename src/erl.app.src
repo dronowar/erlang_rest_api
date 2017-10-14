@@ -8,7 +8,8 @@
       stdlib,
 		  jiffy,
 		  cowboy,
-          cowboy_session
+      cowboy_session,
+      emodel
     ]},
   {mod, { erl_app, []}},
   {env, []}

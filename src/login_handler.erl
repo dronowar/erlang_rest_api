@@ -50,27 +50,38 @@ login_from_json(Req, State) ->
     io:format("login_from_json~n"),
     {ok, Body, Req1} = cowboy_req:read_urlencoded_body(Req),
     io:format("Body: ~p~n", [Body]),
-    case Body of
+    Model = [
+        {<<"email">>, required, string, email, [non_empty]},
+        {<<"pass">>, required, string, pass, [non_empty]}
+    ],
+    {Emodel, Req0} = reply_json(Body, Model, Req1),
+    % io:format("Req0: ~p~n", [Req0]),
+    io:format("Emodel: ~p~n", [Emodel]),
+    {true, Req0, State}.
+
+reply_json(Body, Model, Req) ->
+    case Body of 
         [{PostVals, true}] ->
             io:format("Post: ~p~n", [PostVals]), 
-            try jiffy:decode(PostVals, [return_maps]) of 
+            try jiffy:decode(PostVals, [return_maps]) of
                 Data ->
-                    Email = maps:get(<<"email">>, Data),
-                    io:format("Email: ~p~n", [Email]),
-                    Req3 = reply(200, Data, Req1),
-                    {true, Req3, State}
+                    % Email = maps:get(<<"email">>, Data),
+                    Emodel = emodel:from_map(Data, #{}, Model),
+                    Req3 = reply(200, Data, Req),
+                    {Emodel, Req3}
             catch
                 _:_ -> 
-                    Req3 = reply(400, <<"Invalid json">>, Req1),
-                    {true, Req3, State}
+                    Req3 = reply(400, <<"Invalid json">>, Req),
+                    {false, Req3}
             end;
         [] ->
-            Req2 = reply(400, <<"Missing body">>, Req1),
-            {true, Req2, State};
+            Req2 = reply(400, <<"Missing body">>, Req),
+            {false, Req2};
         _ ->
-            Req2 = reply(400, <<"Bad request">>, Req1),
-            {true, Req2, State}
+            Req2 = reply(400, <<"Bad request">>, Req),
+            {false, Req2}
     end.
-    % {true, Req2, State}.
+
 reply(Code, Body, Req) ->
-    Req1 = cowboy_req:reply(Code, #{<<"content-type">> => <<"application/json">>}, jiffy:encode(Body), Req).
+    Req1 = cowboy_req:reply(Code, #{<<"content-type">> => <<"application/json">>}, jiffy:encode(Body), Req),
+    {ok, Req1}.

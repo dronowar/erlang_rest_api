@@ -11,11 +11,11 @@
 -export([hello_to_json/2]).
 
 init(Req, _State) ->
-    {_, Req1} = cowboy_session:set(<<"user_id">>, 15, Req),
-    {Value, Req2} = cowboy_session:get(<<"user_id">>, Req1),
-    io:format("session value: ~p~n", [Value]),
+    % {_, Req1} = cowboy_session:set(<<"user_id">>, 15, Req),
+    % {Value, Req2} = cowboy_session:get(<<"user_id">>, Req1),
+    % io:format("session value: ~p~n", [Value]),
     Message = [hello, <<"Good day">>],
-    {cowboy_rest, Req2, Message}.
+    {cowboy_rest, Req, Message}.
 
 allowed_methods(Req, State) ->  
     {[<<"GET">>], Req, State}.
