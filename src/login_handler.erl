@@ -5,10 +5,12 @@
 -export([init/2]).
 -export([allowed_methods/2]).
 -export([content_types_accepted/2]).
+-export([resource_exists/2]).
 
 %% Callback Callbacks
 -export([login_from_json/2]).
 
+%% Cowboy REST callbacks
 init(Req, State) ->
     {cowboy_rest, Req, State}.
 
@@ -60,6 +62,7 @@ login_from_json(Req, State) ->
 
     end.
 
+%% Login functions
 login(Emodel, Req) ->
     {User, _} = cowboy_session:get(<<"user">>, Req),
     case User of
@@ -71,6 +74,7 @@ login(Emodel, Req) ->
             {error, reply(400, <<"Allready auth">>, Req)}
     end.
 
+%% Base functions (move to included file)
 get_body(Body, Req) ->
     case Body of 
         [{Input, true}] ->
