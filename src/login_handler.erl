@@ -10,6 +10,9 @@
 %% Callback Callbacks
 -export([login_from_json/2]).
 
+%% Helpes
+-import(helper, [get_body/2, get_model/3, reply/3]).
+
 %% Cowboy REST callbacks
 init(Req, State) ->
     {cowboy_rest, Req, State}.
@@ -73,26 +76,3 @@ login(Emodel, Req) ->
         _ ->
             {error, reply(400, <<"Allready auth">>, Req)}
     end.
-
-%% Base functions (move to included file)
-get_body(Body, Req) ->
-    case Body of 
-        [{Input, true}] ->
-            {ok, Input, Req};
-        [] ->
-            {error, empty, reply(400, <<"Missing body">>, Req)};
-        _ ->
-            {error, empty, reply(400, <<"Bad request">>, Req)}
-    end.
-
-get_model(Input, Model, Req) ->
-            try jiffy:decode(Input, [return_maps]) of
-                Data ->
-                    emodel:from_map(Data, #{}, Model)
-            catch
-                _:_ ->
-                    {error, empty, reply(400, <<"Invalid json">>, Req)}
-            end.
-
-reply(Code, Body, Req) ->
-    cowboy_req:reply(Code, #{<<"content-type">> => <<"application/json">>}, jiffy:encode(Body), Req).
