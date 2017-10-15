@@ -1,4 +1,4 @@
--module(login_handler).
+-module(logout_handler).
 -behavior(cowboy_rest).
 
 %% REST Callbacks
@@ -7,7 +7,7 @@
 -export([content_types_accepted/2]).
 
 %% Callback Callbacks
--export([login_from_json/2]).
+-export([logout_from_json/2]).
 
 init(Req, State) ->
     {cowboy_rest, Req, State}.
@@ -17,10 +17,10 @@ allowed_methods(Req, State) ->
 
 content_types_accepted(Req, State) ->
     {[
-        {<<"application/json">>, login_from_json}
+        {<<"application/json">>, logout_from_json}
     ], Req, State}.
 
-login_from_json(Req, State) ->
+logout_from_json(Req, State) ->
     {ok, Body, Req1} = cowboy_req:read_urlencoded_body(Req),
 
     %% Check request body
