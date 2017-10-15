@@ -6,6 +6,7 @@
 -export([allowed_methods/2]).
 -export([content_types_accepted/2]).
 -export([resource_exists/2]).
+-export([is_authorized/2]).
 
 %% Callback Callbacks
 -export([logout_from_json/2]).
@@ -28,21 +29,15 @@ content_types_accepted(Req, State) ->
 resource_exists(Req, State) ->
   {false, Req, State}.
 
-logout_from_json(Req, State) ->
-    case logout(Req) of
-        {ok, Req1} ->
-            {true, Req1, State};
-        {error, Req2} ->
-            {false, Req2, State}
-    end.
-
-%% Logout functions
-logout(Req) ->
+is_authorized(Req, State) ->
     {User, _} = cowboy_session:get(<<"user">>, Req),
     case User of
         undefined ->
-            {error, reply(400, <<"Allready logout">>, Req)};
+            {{false, <<"Unauthorized">>}, Req, State};
         User ->
-            {ok, Req1} = cowboy_session:expire(Req),
-            {ok, Req1}
+            {true, Req, State}
     end.
+
+logout_from_json(Req, State) ->
+    {ok, Req1} = cowboy_session:expire(Req).
+    {true, Req1, State}.

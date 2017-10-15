@@ -52,8 +52,9 @@ login_from_json(Req, State) ->
 
                     %% Perform login
                     case login(Emodel, Req1) of
-                        {ok, ReqUser} ->
-                            {true, ReqUser, State};
+                        {ok, Req5} ->
+                            {ok, User} = Emodel,
+                            {true, reply(200, User, Req5), State};
                         {error, Req6} ->
                             {false, Req6, State}
                     end
@@ -70,9 +71,7 @@ login(Emodel, Req) ->
     {User, _} = cowboy_session:get(<<"user">>, Req),
     case User of
         undefined ->
-            {ok, Req1} = cowboy_session:set(<<"user">>, Emodel, Req),
-            {ok, Data} = Emodel,
-            {ok, reply(200, Data, Req1)};
+            {ok, Req1} = cowboy_session:set(<<"user">>, Emodel, Req);
         _ ->
             {error, reply(400, <<"Allready auth">>, Req)}
     end.
