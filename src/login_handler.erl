@@ -20,6 +20,9 @@ content_types_accepted(Req, State) ->
         {<<"application/json">>, login_from_json}
     ], Req, State}.
 
+resource_exists(Req, State) ->
+  {false, Req, State}.
+
 login_from_json(Req, State) ->
     {ok, Body, Req1} = cowboy_req:read_urlencoded_body(Req),
 
