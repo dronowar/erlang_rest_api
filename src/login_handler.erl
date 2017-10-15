@@ -36,8 +36,16 @@ login_from_json(Req, State) ->
         {ok, Input, _Req} ->
             %% Validate body json and fields
             Model = [
-                {<<"email">>, required, string, email, [non_empty]},
-                {<<"pass">>, required, string, pass, [non_empty]}
+                {<<"email">>, required, string, email, [non_empty,
+                    fun(V) ->
+                        validator:email(V)
+                    end
+                ]},
+                {<<"pass">>, required, string, pass, [non_empty, 
+                    fun(V) -> 
+                        validator:min_length(6, V)
+                    end
+                ]}
             ],
             Emodel = get_model(Input, Model, Req1),
 
@@ -68,10 +76,10 @@ login_from_json(Req, State) ->
 
 %% Login functions
 login(Emodel, Req) ->
-    {User, _} = cowboy_session:get(<<"user">>, Req),
-    case User of
-        undefined ->
-            {ok, Req1} = cowboy_session:set(<<"user">>, Emodel, Req);
-        _ ->
+    case cowboy_session:get(<<"user">>, Req) of
+        {undefined, _} ->
+            {ok, Req1} = cowboy_session:set(<<"user">>, Emodel, Req),
+            {ok, Req1};
+        {_, _} ->
             {error, reply(400, <<"Allready auth">>, Req)}
     end.

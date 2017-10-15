@@ -30,14 +30,13 @@ resource_exists(Req, State) ->
   {false, Req, State}.
 
 is_authorized(Req, State) ->
-    {User, _} = cowboy_session:get(<<"user">>, Req),
-    case User of
-        undefined ->
+    case cowboy_session:get(<<"user">>, Req) of
+        {undefined, _} ->
             {{false, <<"Unauthorized">>}, Req, State};
-        User ->
+        {_, _} ->
             {true, Req, State}
     end.
 
 logout_from_json(Req, State) ->
-    {ok, Req1} = cowboy_session:expire(Req).
+    {ok, Req1} = cowboy_session:expire(Req),
     {true, Req1, State}.
