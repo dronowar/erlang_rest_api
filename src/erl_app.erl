@@ -20,7 +20,7 @@ start(_StartType, _StartArgs) ->
     {ok, _} = cowboy:start_clear(my_http_listener,
         [{port, 8080}],
         #{env => #{dispatch => Dispatch},
-        middlewares => [cowboy_router, session_middleware, cowboy_handler]
+        middlewares => [cowboy_router, session_cowboy_middleware, cowboy_handler]
     }),
     erl_sup:start_link().
 

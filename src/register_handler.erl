@@ -1,4 +1,4 @@
--module(login_handler).
+-module(register_handler).
 -behavior(cowboy_rest).
 
 %% REST Callbacks
@@ -8,10 +8,10 @@
 -export([resource_exists/2]).
 
 %% Callback Callbacks
--export([login_from_json/2]).
+-export([register_from_json/2]).
 
 %% Helpes
--import(helper, [get_body/2, get_model/3, reply/3, pwd2hash/1]).
+-import(helper, [get_body/2, get_model/3, reply/3]).
 
 %% Cowboy REST callbacks
 init(Req, State) ->
@@ -22,13 +22,13 @@ allowed_methods(Req, State) ->
 
 content_types_accepted(Req, State) ->
     {[
-        {<<"application/json">>, login_from_json}
+        {<<"application/json">>, register_from_json}
     ], Req, State}.
 
 resource_exists(Req, State) ->
   {false, Req, State}.
 
-login_from_json(Req, State) ->
+register_from_json(Req, State) ->
     {ok, Body, Req1} = cowboy_req:read_urlencoded_body(Req),
 
     %% Check request body
@@ -45,7 +45,9 @@ login_from_json(Req, State) ->
                     fun(V) -> 
                         validator:min_length(6, V)
                     end
-                ]}
+                ]},
+                {<<"fname">>, required, string, pass, [non_empty]},
+                {<<"lname">>, required, string, lname, [non_empty]}                
             ],
             Emodel = get_model(Input, Model, Req1),
 
@@ -58,9 +60,10 @@ login_from_json(Req, State) ->
                     {false, Req4, State};
                 {ok, _} ->
 
-                    %% Perform login
-                    case login(Emodel, Req1) of
-                        {ok, User, Req5} ->
+                    %% Perform Registration
+                    case registration(Emodel, Req1) of
+                        {ok, Req5} ->
+                            {ok, User} = Emodel,
                             {true, reply(200, User, Req5), State};
                         {error, Req6} ->
                             {false, Req6, State}
@@ -73,22 +76,10 @@ login_from_json(Req, State) ->
 
     end.
 
-%% Login functions
-login(Emodel, Req) ->
+%% Registration functions
+registration(Emodel, Req) ->
     %% Auth middleware
     case middleware:auth(Emodel, Req) of
-        {true, Req1} ->
-            {ok, Data} = Emodel,
-            Email = maps:get(email, Data),
-            Pass = maps:get(pass, Data),
-            erlang:display([Email, pwd2hash(Pass)]),
-            case persist:get_user(pgdb, Email, pwd2hash(Pass)) of
-                none ->
-                    {error, reply(412, <<"These credentials do not match our records.">>, Req1)};
-                User ->
-                    erlang:display(User),
-                    {ok, Req2} = cowboy_session:set(<<"user">>, User, Req1),
-                    {ok, User, Req2}
-            end;
-        {false, Req3} -> {error, Req3}
+        {true, Req} -> {ok, Req};
+        {false, Req} -> {error, Req}
     end.

@@ -9,7 +9,8 @@
 		  jiffy,
 		  cowboy,
       cowboy_session,
-      emodel
+      emodel,
+      pgapp
     ]},
   {mod, { erl_app, []}},
   {env, []}

@@ -1,4 +1,4 @@
--module(session_middleware).
+-module(session_cowboy_middleware).
 -behaviour(cowboy_middleware).
 
 -export([execute/2]).
