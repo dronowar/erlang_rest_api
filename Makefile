@@ -13,9 +13,9 @@ clean:
 	@( $(REBAR) clean )
 
 run:
-	erl -pa ./ebin -pa ./deps/*/ebin -sname $(APPNAME)@localhost -s $(APPNAME)
+	erl -config config/sys -pa ./ebin -pa ./deps/*/ebin -sname $(APPNAME)@localhost -s $(APPNAME)
 
 run-local:
-	erl -pa ./ebin -pa ./deps/*/ebin -sname $(APPNAME)@localhost -s $(APPNAME) -s sync
+	erl -config config/sys -pa ./ebin -pa ./deps/*/ebin -sname $(APPNAME)@localhost -s $(APPNAME) -s sync
 
 .PHONY: all, deps, compile
