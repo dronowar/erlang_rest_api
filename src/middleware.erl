@@ -9,13 +9,13 @@ auth(Req) ->
         {undefined, Req1} ->
             {false, Req1};
         {User, Req1} ->
-            {true, User, Req}
+            {true, User, Req1}
     end.
 
 allready_auth(Req) ->
     case auth(Req) of
-        {true, User, Req} ->
-            {true, User, reply(400, <<"Allready auth">>, Req)};
-        {false, Req} ->
-            {false, Req}
+        {true, User, Req1} ->
+            {true, User, reply(400, <<"Allready auth">>, Req1)};
+        {false, Req1} ->
+            {false, Req1}
     end.

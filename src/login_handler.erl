@@ -81,12 +81,10 @@ login(Emodel, Req) ->
             {ok, Data} = Emodel,
             Email = maps:get(email, Data),
             Pass = maps:get(pass, Data),
-            erlang:display([Email, pwd2hash(Pass)]),
             case persist:get_user(pgdb, Email, pwd2hash(Pass)) of
                 none ->
                     {error, reply(412, <<"These credentials do not match our records.">>, Req1)};
                 {ok, User} ->
-                    erlang:display(User),
                     {ok, Req2} = cowboy_session:set(<<"user">>, User, Req1),
                     {ok, User, Req2}
             end;

@@ -1,10 +1,10 @@
-# erlang_rest_api
+# Erlang REST API example
 Simple example Erlang Cowboy REST API service
 ## To start
 ```
 make run-local
 ```
-Install Postgres and create database "erl".
+Install Postgres and create database and postgres user.
 
 Edit config /config/sys.config to connect db
 

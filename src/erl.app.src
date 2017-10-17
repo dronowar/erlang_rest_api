@@ -6,8 +6,8 @@
   {applications, [
       kernel,
       stdlib,
-		  jiffy,
-		  cowboy,
+	  jiffy,
+	  cowboy,
       cowboy_session,
       emodel,
       pgapp
