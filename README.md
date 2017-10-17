@@ -1,5 +1,10 @@
 # Erlang REST API example
 Simple example Erlang Cowboy REST API service
+- Cowboy 2.0
+- Cowboy sessions (fork)
+- Emodel (validate user input)
+- pgapp (poolboy and epgsql)
+- sync (hotreload)
 ## To start
 ```
 make run-local
@@ -19,6 +24,18 @@ content-type: application/json
 ```
 GET /
 Hello message
+
+POST /register
+Register new user
+json body: {
+  "email":"Anakin@darkside.com",
+  "pass":"123456",
+  "fname": "Dart",
+  "lname": "Vader"
+}
+
+GET /register?token=EX9dNvZebWsKDwGlnUS06DajIwJMhjqCB1hkNvwnEtVHqehqoPvz7E8ULz1qhwTP
+Complete registration
 
 POST /login
 Login
