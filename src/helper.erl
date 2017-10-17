@@ -28,7 +28,7 @@ reply(Code, Body, Req) ->
     cowboy_req:reply(Code, #{<<"content-type">> => <<"application/json">>}, jiffy:encode(Body), Req).
 
 pwd2db(MD5Bin) ->
-    smd5(<<MD5Bin/binary, (application:get_env(erl, salt, <<"boombang">>))/binary>>).
+    list_to_binary(smd5(<<MD5Bin/binary, (application:get_env(erl, salt, <<"boombang">>))/binary>>)).
 
 pwd2hash(Bin) when is_binary(Bin) ->
     pwd2hash(binary_to_list(Bin));

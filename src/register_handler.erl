@@ -13,7 +13,7 @@
 -export([register_from_text/2]).
 
 %% Helpes
--import(helper, [get_body/2, get_model/3, reply/3]).
+-import(helper, [get_body/2, get_model/3, reply/3, pwd2hash/1]).
 
 %% Cowboy REST callbacks
 init(Req, State) ->
@@ -57,7 +57,7 @@ register_from_json(Req, State) ->
                         validator:min_length(6, V)
                     end
                 ]},
-                {<<"fname">>, required, string, pass, [non_empty]},
+                {<<"fname">>, required, string, fname, [non_empty]},
                 {<<"lname">>, required, string, lname, [non_empty]}                
             ],
             Emodel = get_model(Input, Model, Req1),
@@ -87,12 +87,41 @@ register_from_json(Req, State) ->
     end.
 
 register_from_text(Req, State) ->
-    case cowboy_session:get(<<"register">>, Req) of
-        {undefined, Req1} ->
-            {[], reply(400, <<"Token expired">>, Req1), State};
-        {Register, Req1} ->
-            erlang:display(Register),
-            {jiffy:encode(Register), Req1, State}
+    #{token := Token} = cowboy_req:match_qs([{token, nonempty, undefined}], Req),
+    case Token of
+        undefined ->
+            {[], reply(400, <<"Token mismatch">>, Req), State};
+        _Token ->
+            case cowboy_session:get(<<"register">>, Req) of
+                {undefined, Req1} ->
+                    {[], reply(400, <<"Token expired">>, Req1), State};
+                {Register, Req1} ->
+                    SToken = maps:get(token, Register),
+                    erlang:display([Token, SToken]),
+                    case SToken =:= Token of
+                        true ->
+                            {ok, Req2} = cowboy_session:set(register, undefined, Req1),
+                            case persist:check_user(pgdb, maps:get(email, Register)) of
+                                false ->
+                                    Email = maps:get(email, Register),
+                                    Pass = maps:get(pass, Register),
+                                    Fname = maps:get(fname, Register),
+                                    Lname = maps:get(lname, Register),
+                                    case persist:add_user(pgdb, Email, Fname, Lname, Pass) of
+                                        {ok, 1} ->
+                                            User = #{email => Email, fname => Fname, lname => Lname},
+                                            {ok, Req3} = cowboy_session:set(<<"user">>, User, Req2),
+                                            {jiffy:encode(User), Req3, State};
+                                        _ ->
+                                            {[], reply(500, <<"Cannot add new user in database">>, Req2)} 
+                                    end;
+                                _ ->
+                                    {[], reply(400, <<"User already exists">>, Req2)} 
+                            end;
+                        false -> 
+                            {[], reply(400, <<"Wrong token!">>, Req1), State}
+                    end
+            end
     end.
 
 %% Registration functions
@@ -101,28 +130,24 @@ registration(Emodel, Req) ->
     case middleware:allready_auth(Req) of
         {false, Req1} ->
             {ok, Data} = Emodel,
-            % Email = maps:get(email, Data),
-            % Pass = maps:get(pass, Data),
-            % Fname = maps:get(fname, Data),
-            % Lname = maps:get(lname, Data),
-            % Token = ,
             case persist:check_user(pgdb, maps:get(email, Data)) of
-                false -> 
-                    Register = maps:put(token, random(), Data),
+                false ->
+                    Pass = maps:get(pass, Data),
+                    Register_safe_pass = maps:update(pass, pwd2hash(Pass), Data),
+                    Register = maps:put(token, random(64), Register_safe_pass),
                     {ok, Req2} = cowboy_session:set(<<"register">>, Register, Req1),
                     {ok, Register, Req2};
                 _ ->
                     {error, reply(400, <<"User already exists">>, Req1)}
             end;
-            % case persist:get_user(pgdb, Email, pwd2hash(Pass), Fname, Lname) of
-            %     none ->
-            %         {error, reply(412, <<"These credentials do not match our records.">>, Req1)};
-            %     {ok, User} ->
-            %         {ok, Req2} = cowboy_session:set(<<"user">>, User, Req1),
-            %         {ok, User, Req2}
-            % end;
         {true, _User, Req3} -> {error, Req3}
     end.
 
-random() ->
-    base64:encode(crypto:strong_rand_bytes(64)).
+random(Len) ->
+    Chrs = list_to_tuple("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"),
+    ChrsSize = size(Chrs),
+    F = fun(_, R) -> [element(rand:uniform(ChrsSize), Chrs) | R] end,
+    list_to_binary(lists:foldl(F, "", lists:seq(1, Len))).
+
+% random() ->
+%     base64:encode(crypto:strong_rand_bytes(64)).

@@ -5,7 +5,8 @@
 -export([
     get_user/2,
     get_user/3,
-    check_user/2
+    check_user/2,
+    add_user/5
 ]).
 
 init_db(Pool) ->
@@ -38,7 +39,10 @@ get_user(Pool, Email, Pass) ->
     end.
 
 check_user(Pool, Email) ->
-    case pgapp:equery(Pool, "SELECT COUNT(email) AS c FROM users WHERE active=TRUE AND email=$1", [Email]) of
+    case pgapp:equery(Pool, "SELECT COUNT(email) AS c FROM users WHERE email=$1", [Email]) of
         {ok, _, [{Count}]} when Count =:= 1 -> true;
         _ -> false
     end.
+
+add_user(Pool, Email, Fname, Lname, Pass) ->
+    pgapp:equery(Pool, "INSERT INTO users(email, fname, lname, pass, active) VALUES ($1, $2, $3, $4, TRUE);", [Email, Fname, Lname, Pass]).
