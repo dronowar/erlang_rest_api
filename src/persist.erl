@@ -4,7 +4,8 @@
 
 -export([
     get_user/2,
-    get_user/3
+    get_user/3,
+    check_user/2
 ]).
 
 init_db(Pool) ->
@@ -34,4 +35,10 @@ get_user(Pool, Email, Pass) ->
     case pgapp:equery(Pool, "SELECT id, email, fname, lname FROM users WHERE active=TRUE AND email=$1 AND pass=$2", [Email, Pass]) of
         {ok, _, [{Id, Email, Fname, Lname}]} -> {ok, #{id => Id, email => Email, fname => Fname, lname => Lname}};
         _ -> none
+    end.
+
+check_user(Pool, Email) ->
+    case pgapp:equery(Pool, "SELECT COUNT(email) AS c FROM users WHERE active=TRUE AND email=$1", [Email]) of
+        {ok, _, [{Count}]} when Count =:= 1 -> true;
+        _ -> false
     end.

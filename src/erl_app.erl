@@ -13,6 +13,7 @@ start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile([         
             {'_', [
                 {"/", hello_handler, []},
+                {"/register", register_handler, []},
                 {"/login", login_handler, []},
                 {"/logout", logout_handler, []}
             ]}     
