@@ -76,8 +76,8 @@ login_from_json(Req, State) ->
 %% Login functions
 login(Emodel, Req) ->
     %% Auth middleware
-    case middleware:auth(Emodel, Req) of
-        {true, Req1} ->
+    case middleware:allready_auth(Req) of
+        {false, Req1} ->
             {ok, Data} = Emodel,
             Email = maps:get(email, Data),
             Pass = maps:get(pass, Data),
@@ -85,10 +85,10 @@ login(Emodel, Req) ->
             case persist:get_user(pgdb, Email, pwd2hash(Pass)) of
                 none ->
                     {error, reply(412, <<"These credentials do not match our records.">>, Req1)};
-                User ->
+                {ok, User} ->
                     erlang:display(User),
                     {ok, Req2} = cowboy_session:set(<<"user">>, User, Req1),
                     {ok, User, Req2}
             end;
-        {false, Req3} -> {error, Req3}
+        {true, _User, Req3} -> {error, Req3}
     end.

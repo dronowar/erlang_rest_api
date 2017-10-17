@@ -3,6 +3,7 @@
 -export([init_db/1]).
 
 -export([
+    get_user/2,
     get_user/3
 ]).
 
@@ -24,12 +25,13 @@ init_db(Pool) ->
         CREATE INDEX users_email_pass_active_idx ON users(email, pass, active);
     ").
 
+get_user(Pool, Email) ->
+    case pgapp:equery(Pool, "SELECT id, email, fname, lname FROM users WHERE active=TRUE AND email=$1", [Email]) of
+        {ok, _, [{Id, Email, Fname, Lname}]} -> {ok, #{id => Id, email => Email, fname => Fname, lname => Lname}};
+        _ -> none
+    end.
 get_user(Pool, Email, Pass) ->
-    erlang:display(pgapp:equery(Pool, "SELECT id, email, fname, lname FROM users WHERE active=TRUE AND email=$1 AND pass=$2", [Email, Pass])),
     case pgapp:equery(Pool, "SELECT id, email, fname, lname FROM users WHERE active=TRUE AND email=$1 AND pass=$2", [Email, Pass]) of
-        % {ok, _, [Result]} -> 
-            % erlang:display(Result),
-            % Result;
-        {ok, _, [{Id, Email, Fname, Lname}]} -> #{id => Id, email => Email, fname => Fname, lname => Lname};
+        {ok, _, [{Id, Email, Fname, Lname}]} -> {ok, #{id => Id, email => Email, fname => Fname, lname => Lname}};
         _ -> none
     end.

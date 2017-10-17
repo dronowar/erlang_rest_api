@@ -21,5 +21,13 @@ content_types_provided(Req, State) ->
     ], Req, State}.
 
 hello_from_json(Req, State) ->
-    Message = [hello, <<"Good day">>],
-    {jiffy:encode(Message), Req, State}.
+    case middleware:auth(Req) of
+        {true, User, Req1} ->
+            Fname = maps:get(fname, User),
+            Lname = maps:get(lname, User),
+            erlang:display(<<"Good day, ", Fname/binary, " ", Lname/binary>>),
+            Message = [hello,  <<"Good day, ", Fname/binary, " ", Lname/binary>>];
+        {false, Req1} ->
+            Message = [hello, <<"Good day">>]
+    end,
+    {jiffy:encode(Message), Req1, State}.

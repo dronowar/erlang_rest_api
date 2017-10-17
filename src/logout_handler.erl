@@ -30,11 +30,11 @@ resource_exists(Req, State) ->
   {false, Req, State}.
 
 is_authorized(Req, State) ->
-    case cowboy_session:get(<<"user">>, Req) of
-        {undefined, _} ->
-            {{false, <<"Unauthorized">>}, Req, State};
-        {_, _} ->
-            {true, Req, State}
+    case middleware:auth(Req) of
+        {false, Req1} ->
+            {{false, <<"Unauthorized">>}, Req1, State};
+        {true, _User, Req1} ->
+            {true, Req1, State}
     end.
 
 logout_from_json(Req, State) ->

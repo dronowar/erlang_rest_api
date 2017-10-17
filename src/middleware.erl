@@ -1,13 +1,21 @@
 -module(middleware).
 
--export([auth/2]).
+-export([allready_auth/1, auth/1]).
 
 -import(helper, [reply/3]).
 
-auth(Emodel, Req) ->
+auth(Req) ->
     case cowboy_session:get(<<"user">>, Req) of
-        {undefined, _} ->
-            {true, Req};
-        {_, _} ->
-            {false, reply(400, <<"Allready auth">>, Req)}
+        {undefined, Req1} ->
+            {false, Req1};
+        {User, Req1} ->
+            {true, User, Req}
+    end.
+
+allready_auth(Req) ->
+    case auth(Req) of
+        {true, User, Req} ->
+            {true, User, reply(400, <<"Allready auth">>, Req)};
+        {false, Req} ->
+            {false, Req}
     end.
