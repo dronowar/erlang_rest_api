@@ -7,6 +7,7 @@ Simple example Erlang Cowboy REST API service
 - sync (hotreload)
 ## To start
 ```
+make
 make run-local
 ```
 Install Postgres and create database and postgres user.
