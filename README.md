@@ -6,6 +6,10 @@ Simple example Erlang Cowboy REST API service
 - pgapp (poolboy and epgsql)
 - sync (hotreload)
 ## To start
+
+Install rebar  - (e.g. apt-get install rebar or yum rebar)
+
+Then run
 ```
 make
 make run-local
