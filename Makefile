@@ -1,5 +1,5 @@
 APPNAME=erl
-REBAR=`which rebar || echo ./rebar`
+REBAR=`which rebar3 || echo ./rebar3`
 
 all: deps compile
 
